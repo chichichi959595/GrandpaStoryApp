@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>阿公講古 App - iPhone 15 Pro Mockup</title>
+    
+    <!-- 1. 載入 Tailwind CSS (樣式) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Noto Serif TC"', '"Songti TC"', 'serif'],
+                        sans: ['"Noto Serif TC"', '"Songti TC"', 'serif'], 
+                    },
+                    boxShadow: {
+                        'iphone': '0 0 0 1px #4a4a4a, 0 0 0 4px #2a2a2a, 0 20px 50px -10px rgba(0,0,0,0.5)',
+                        'inner-screen': 'inset 0 0 20px rgba(0,0,0,0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 2. 載入 React 和 ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- 3. 載入 Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 4. 載入 Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&display=swap');
+
+        /* 地圖按鈕的輕微浮動動畫 */
+        @keyframes float {
+            0%, 100% { transform: translate(-50%, -50%); }
+            50% { transform: translate(-50%, -55%); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        /* 頁面淡入動畫 */
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out forwards;
+        }
+
+        /* 彈窗背景 */
+        @keyframes backdrop-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-backdrop {
+            animation: backdrop-in 0.3s ease-out forwards;
+        }
+
+        /* 水彩暈染動畫 (不規則變形與流動) */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        body {
+            font-family: "Noto Serif TC", "Songti TC", serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e5e5e5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .iphone-border {
+            box-shadow: 
+                inset 0 0 4px 2px rgba(255,255,255,0.3),
+                inset 0 0 0 6px #5e5e5e,
+                0 0 0 1px #000,
+                20px 20px 60px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Lucide Icons Helper ---
+        const LIcon = ({ name, size = 24, className, ...props }) => {
+            const iconData = lucide.icons[name];
+            if (!iconData) return null;
+            return (
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width={size}
+                    height={size}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={className}
+                    {...props}
+                >
+                    {iconData.map((child, index) => {
+                        const [tag, attrs] = child;
+                        return React.createElement(tag, { ...attrs, key: index });
+                    })}
+                </svg>
+            );
+        };
+
+        const icons = {
+            Home: (p) => <LIcon name="Home" {...p} />,
+            Map: (p) => <LIcon name="Map" {...p} />,
+            BookOpen: (p) => <LIcon name="BookOpen" {...p} />,
+            Settings: (p) => <LIcon name="Settings" {...p} />,
+            Search: (p) => <LIcon name="Search" {...p} />,
+            MapPin: (p) => <LIcon name="MapPin" {...p} />,
+            Camera: (p) => <LIcon name="Camera" {...p} />,
+            Volume2: (p) => <LIcon name="Volume2" {...p} />,
+            Type: (p) => <LIcon name="Type" {...p} />,
+            User: (p) => <LIcon name="User" {...p} />,
+            ChevronRight: (p) => <LIcon name="ChevronRight" {...p} />,
+            Star: (p) => <LIcon name="Star" {...p} />,
+            Music: (p) => <LIcon name="Music" {...p} />,
+            Languages: (p) => <LIcon name="Languages" {...p} />,
+            Battery: (p) => <LIcon name="Battery" {...p} />,
+            Wifi: (p) => <LIcon name="Wifi" {...p} />,
+            Signal: (p) => <LIcon name="Signal" {...p} />,
+            X: (p) => <LIcon name="X" {...p} />, 
+            Info: (p) => <LIcon name="Info" {...p} />
+        };
+
+        // --- Translations ---
+        const translations = {
+            zh: {
+                subtitle: '傳承記憶，連結世代',
+                searchPlaceholder: '搜尋故事、地點或活動...',
+                recentActivities: '近期活動',
+                viewAll: '查看全部 >',
+                navHome: '首頁',
+                navMap: '地圖',
+                navJournal: '遊記',
+                navSettings: '設定',
+                actMeeting: '聚會', actCraft: '手作', actFood: '美食', actExplore: '探索',
+                act1Title: '榕樹下的棋局', act1Loc: '村口大榕樹',
+                act2Title: '古早味童玩製作', act2Loc: '老街文化館',
+                act3Title: '阿嬤的私房菜教學', act3Loc: '社區廚房',
+                act4Title: '尋找遺失的瓦片', act4Loc: '三合院遺址',
+                timeToday: '今日 14:00', timeTomorrow: '明日 10:00', timeSat: '週六 11:00', timeSun: '週日 09:00',
+                mapTitle: '探索地圖', mapSubtitle: '點擊地點來記錄足跡',
+                
+                locLake: '千島湖',
+                locSchool: '永安國小',
+                locWall: '彩繪牆',
+                locWater: '坪林水質檢測',
+                locTea: '茶行',
+                locSign: '失落的村莊招牌',
+                locVillage: '失落的村莊',
+
+                descLake: '彷彿鱷魚浮出水面的壯闊景色，這裡是翡翠水庫的集水區，湖水碧綠清澈，倒映著層層山巒。',
+                descSchool: '這是一所充滿歷史的森林小學，雖然學生不多，但保留了最純樸的教育方式，校園裡還有日治時期留下的老鐘。',
+                descWall: '原本斑駁的老牆，經過社區藝術家的巧手，畫上了昔日農村的生活場景，每一幅畫都是阿公阿嬤的回憶。',
+                descWater: '這裡可以觀察溪流生態，清澈的溪水裡有苦花魚在翻身閃爍，是認識水源保護最好的教室。',
+                descTea: '坪林是包種茶的故鄉，這間老茶行傳承了五代，走進去就能聞到濃濃的茶香，老闆還會教你怎麼泡好茶。',
+                descSign: '一塊鏽跡斑斑的鐵牌，上面依稀可見「XX村」的字樣，是通往那個被水庫淹沒前的舊聚落的唯一指引。',
+                descVillage: '透過枯水期的遺跡，依稀能看見當年房舍的基座。這裡是許多長輩兒時的家，沉睡在水底的記憶。',
+                
+                btnCheckIn: '📍 記錄',
+                btnClose: '關閉',
+
+                journalTitle: '我的遊記', journalCollected: '已收集', journalCountSuffix: '篇',
+                noJournal: '還沒有遊記喔，快去地圖探索吧！', addPhoto: '點擊新增照片',
+                initJournalLoc: '千島湖',
+                initJournalContent: '千島湖的景色真美，湖光山色倒映在水中。阿公說以前這裡沒有這麼多島，是因為水庫興建才變成了現在的樣子。',
+                secondJournalLoc: '永安國小',
+                secondJournalContent: '這所國小充滿了孩子們的笑聲。校園裡有一棵大樹，樹下埋著許多屆畢業生的時光膠囊。',
+                newJournalContentPrefix: '終於來到了', newJournalContentSuffix: '！這裡的空氣聞起來有一種懷舊的味道。聽說這裡藏著一個關於阿公年輕時的秘密...',
+                settingsTitle: '設定', accountName: '乖孫的帳號', accountLevel: '等級 5：小小聽眾',
+                setFontSize: '字體大小', setValueSize: '特大', setSpeed: '語音朗讀速度', setValueSpeed: '慢',
+                setBgMusic: '背景音樂', setValueMusic: '懷舊民謠', setFavorites: '我的收藏', setLanguage: '故事語言', setValueLang: '台語/國語',
+                logout: '登出帳號', version: '版本 v1.0.2 | 阿公講古團隊',
+                visitedMsg: '您已經造訪過', visitedSuffix: '囉！', arrivedMsg: '🎉 已抵達', arrivedSuffix: '！遊記已生成。'
+            },
+            en: {
+                subtitle: 'Inheriting memories, connecting generations.',
+                searchPlaceholder: 'Search...',
+                recentActivities: 'Recent Activities',
+                viewAll: 'View All >',
+                navHome: 'Home', navMap: 'Map', navJournal: 'Journal', navSettings: 'Settings',
+                actMeeting: 'Gathering', actCraft: 'Craft', actFood: 'Cooking', actExplore: 'Explore',
+                act1Title: 'Chess under the Banyan', act1Loc: 'Village Banyan',
+                act2Title: 'Toy Making', act2Loc: 'Old Street Hall',
+                act3Title: 'Grandma\'s Recipes', act3Loc: 'Community Kitchen',
+                act4Title: 'Finding Tiles', act4Loc: 'Ruins',
+                timeToday: 'Today 14:00', timeTomorrow: 'Tmrw 10:00', timeSat: 'Sat 11:00', timeSun: 'Sun 09:00',
+                mapTitle: 'Explore Map', mapSubtitle: 'Tap to record footprint.',
+                locLake: 'Thousand Island Lake',
+                locSchool: 'Yong-an Elementary',
+                locWall: 'Painted Wall',
+                locWater: 'Water Quality Testing',
+                locTea: 'Tea Shop',
+                locSign: 'Lost Village Sign',
+                locVillage: 'The Lost Village',
+
+                descLake: 'A breathtaking view resembling a crocodile surfacing. The emerald water reflects the surrounding mountains beautifully.',
+                descSchool: 'A historic forest elementary school preserving rustic education methods and an old bell from the Japanese era.',
+                descWall: 'Once a mottled old wall, now painted by local artists with scenes of past rural life, full of memories.',
+                descWater: 'An ecological classroom where you can see fish glistening in the clear stream and learn about water conservation.',
+                descTea: 'Pinglin is famous for Pouchong tea. This 5th-generation shop smells of rich tea aroma as soon as you walk in.',
+                descSign: 'A rusty iron sign pointing the way to the old settlement that existed before the reservoir submerged it.',
+                descVillage: 'During dry seasons, foundations of old houses appear. This is the childhood home of many elders, sleeping underwater.',
+
+                btnCheckIn: '📍 Check In',
+                btnClose: 'Close',
+
+                journalTitle: 'My Journal', journalCollected: 'Collected', journalCountSuffix: '',
+                noJournal: 'No entries yet.', addPhoto: 'Add photo',
+                initJournalLoc: 'Thousand Island Lake', 
+                initJournalContent: 'The scenery at Thousand Island Lake is beautiful. Grandpa said there weren\'t so many islands before the reservoir was built.',
+                secondJournalLoc: 'Yong-an Elementary', 
+                secondJournalContent: 'This elementary school is full of children\'s laughter. There is a big tree on campus with time capsules from many graduates buried underneath.',
+
+                newJournalContentPrefix: 'Arrived at ', newJournalContentSuffix: '! Smells nostalgic here.',
+                settingsTitle: 'Settings', accountName: 'Grandchild', accountLevel: 'Lvl 5: Listener',
+                setFontSize: 'Font Size', setValueSize: 'XL', setSpeed: 'Speed', setValueSpeed: 'Slow',
+                setBgMusic: 'Music', setValueMusic: 'Folk', setFavorites: 'Favorites', setLanguage: 'Language', setValueLang: 'Tai/Mandarin',
+                logout: 'Log Out', version: 'v1.0.2 | Grandpa Team',
+                visitedMsg: 'Visited ', visitedSuffix: '!', arrivedMsg: '🎉 Arrived at ', arrivedSuffix: '!'
+            }
+        };
+
+        const ACTIVITIES_DATA = [
+            { id: 1, titleKey: 'act1Title', dateKey: 'timeToday', locationKey: 'act1Loc', typeKey: 'actMeeting', icon: '🍵' },
+            { id: 2, titleKey: 'act2Title', dateKey: 'timeTomorrow', locationKey: 'act2Loc', typeKey: 'actCraft', icon: '🪁' },
+            { id: 3, titleKey: 'act3Title', dateKey: 'timeSat', locationKey: 'act3Loc', typeKey: 'actFood', icon: '🍱' },
+            { id: 4, titleKey: 'act4Title', dateKey: 'timeSun', locationKey: 'act4Loc', typeKey: 'actExplore', icon: '🗺️' },
+        ];
+
+        const MAP_POINTS_DATA = [
+            { id: 1, x: 20, y: 85, nameKey: 'locLake', descKey: 'descLake', icon: '🏞️' },
+            { id: 2, x: 50, y: 75, nameKey: 'locSchool', descKey: 'descSchool', icon: '🏫' },
+            { id: 3, x: 80, y: 65, nameKey: 'locWall', descKey: 'descWall', icon: '🎨' },
+            { id: 4, x: 60, y: 50, nameKey: 'locWater', descKey: 'descWater', icon: '💧' },
+            { id: 5, x: 30, y: 40, nameKey: 'locTea', descKey: 'descTea', icon: '🍵' },
+            { id: 6, x: 50, y: 25, nameKey: 'locSign', descKey: 'descSign', icon: '🪧' },
+            { id: 7, x: 80, y: 15, nameKey: 'locVillage', descKey: 'descVillage', icon: '🏚️' },
+        ];
+
+        // --- 新增：水彩暈染背景組件 (Watercolor Background) ---
+        const WatercolorBg = () => (
+            <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+                {/* 使用 mix-blend-multiply 和 blur 來模擬水彩混色效果 */}
+                {/* 1. 左上：清新嫩綠 */}
+                <div className="absolute -top-[10%] -left-[10%] w-[70%] h-[40%] bg-[#dcedc8] rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+                {/* 2. 右上：溫暖鵝黃 */}
+                <div className="absolute top-[5%] -right-[10%] w-[60%] h-[40%] bg-[#fff9c4] rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+                {/* 3. 左下：大地暖褐 */}
+                <div className="absolute -bottom-[10%] -left-[10%] w-[60%] h-[40%] bg-[#ffe0b2] rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+                {/* 4. 右下：清澈湖水綠 */}
+                <div className="absolute -bottom-[5%] -right-[10%] w-[70%] h-[40%] bg-[#b2dfdb] rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+            </div>
+        );
+
+        // --- 彈窗元件 ---
+        const MapModal = ({ point, onClose, onCheckIn, isVisited, t }) => {
+            if (!point) return null;
+
+            return (
+                <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-backdrop">
+                    <div className="bg-[#fff9f0] w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden border-4 border-[#8d6e63] transform transition-all animate-fade-in relative">
+                        <button onClick={onClose} className="absolute top-3 right-3 text-[#8d6e63] hover:text-[#5d4037] bg-white/50 rounded-full p-1">
+                            <icons.X size={24} />
+                        </button>
+
+                        <div className="bg-[#eaf8e6] p-6 flex flex-col items-center border-b-2 border-[#d7ccc8]">
+                            <div className="text-6xl mb-2 drop-shadow-md">{point.icon}</div>
+                            <h3 className="text-2xl font-bold text-[#5d4037]">{t(point.nameKey)}</h3>
+                        </div>
+                        
+                        <div className="p-6">
+                            <p className="text-[#5d4037] text-base leading-relaxed mb-6 text-justify">
+                                {t(point.descKey)}
+                            </p>
+                            
+                            <button 
+                                onClick={() => onCheckIn(point)}
+                                className={`w-full py-3 rounded-xl font-bold text-lg shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2
+                                ${isVisited 
+                                    ? 'bg-[#e0e0e0] text-gray-500 cursor-default' 
+                                    : 'bg-[#8d6e63] text-white hover:bg-[#6d4c41]'
+                                }`}
+                                disabled={isVisited}
+                            >
+                                {isVisited ? '✅ 已完成打卡' : t('btnCheckIn')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        function GrandpaStoryApp() {
+            const [activeTab, setActiveTab] = useState('home');
+            const [visitedLocations, setVisitedLocations] = useState([1, 2]); 
+            const [showNotification, setShowNotification] = useState(false);
+            const [notificationMsg, setNotificationMsg] = useState('');
+            const [lang, setLang] = useState('zh');
+            const [currentTime, setCurrentTime] = useState('');
+            const [selectedPoint, setSelectedPoint] = useState(null);
+
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    const now = new Date();
+                    setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
+                }, 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            const t = (key) => translations[lang][key] || key;
+            
+            const getInitialJournal = () => [
+                { id: 1, location: t('initJournalLoc'), time: '2023-10-24', content: t('initJournalContent'), image: '🏞️' },
+                { id: 2, location: t('secondJournalLoc'), time: '2023-10-25', content: t('secondJournalContent'), image: '🏫' }
+            ];
+            
+            const [journalEntries, setJournalEntries] = useState(getInitialJournal());
+
+            useEffect(() => {
+                setJournalEntries(prev => {
+                    const initialData = getInitialJournal();
+                    const userEntries = prev.filter(entry => entry.id > 2);
+                    return [...initialData, ...userEntries];
+                });
+            }, [lang]);
+
+            const toggleLanguage = () => setLang(prev => prev === 'zh' ? 'en' : 'zh');
+
+            const handlePointClick = (point) => {
+                setSelectedPoint(point);
+            };
+
+            const handleCheckIn = (pointData) => {
+                const locName = t(pointData.nameKey);
+                setSelectedPoint(null);
+                if (visitedLocations.includes(pointData.id)) return;
+
+                const newEntry = {
+                    id: Date.now(),
+                    location: locName,
+                    time: new Date().toLocaleDateString(),
+                    content: `${t('newJournalContentPrefix')}${locName}${t('newJournalContentSuffix')}`,
+                    image: pointData.icon
+                };
+                
+                setVisitedLocations([...visitedLocations, pointData.id]);
+                setJournalEntries([newEntry, ...journalEntries]);
+                setNotificationMsg(`${t('arrivedMsg')}${locName}${t('arrivedSuffix')}`);
+                setShowNotification(true);
+                setTimeout(() => setShowNotification(false), 3000);
+            };
+
+            const renderContent = () => {
+                switch (activeTab) {
+                    case 'home': return <HomeView t={t} />;
+                    case 'map': return <MapView onPointClick={handlePointClick} visited={visitedLocations} t={t} />;
+                    case 'journal': return <JournalView entries={journalEntries} t={t} />;
+                    case 'settings': return <SettingsView t={t} />;
+                    default: return <HomeView t={t} />;
+                }
+            };
+
+            return (
+                <div className="relative">
+                    {/* 物理按鈕模擬 */}
+                    <div className="absolute -left-[4px] top-[180px] w-[3px] h-[30px] bg-gray-400 rounded-l-md"></div>
+                    <div className="absolute -left-[4px] top-[230px] w-[3px] h-[50px] bg-gray-400 rounded-l-md"></div>
+                    <div className="absolute -left-[4px] top-[290px] w-[3px] h-[50px] bg-gray-400 rounded-l-md"></div>
+                    <div className="absolute -right-[4px] top-[250px] w-[3px] h-[80px] bg-gray-400 rounded-r-md"></div>
+
+                    {/* iPhone 本體 */}
+                    <div className="iphone-border bg-black rounded-[55px] p-[12px] w-[393px] h-[852px] relative overflow-hidden">
+                        
+                        {/* 螢幕區域 */}
+                        <div className="w-full h-full bg-[#eaf8e6] rounded-[44px] overflow-hidden relative shadow-inner-screen flex flex-col">
+                            
+                            {/* 頂部狀態列 */}
+                            <div className="h-[48px] w-full flex justify-between items-center px-6 pt-2 z-50 text-[#333] font-semibold text-sm absolute top-0 left-0">
+                                <div className="w-12 text-center font-sans">{currentTime}</div>
+                                <div className="flex gap-2 items-center">
+                                    <icons.Signal size={16} fill="currentColor" />
+                                    <icons.Wifi size={16} />
+                                    <icons.Battery size={20} fill="currentColor" />
+                                </div>
+                            </div>
+
+                            {/* 動態島 */}
+                            <div className="absolute top-[11px] left-1/2 -translate-x-1/2 w-[120px] h-[35px] bg-black rounded-full z-[60] flex justify-center items-center">
+                                <div className="w-2 h-2 rounded-full bg-[#1a1a1a] ml-16"></div>
+                            </div>
+
+                            {/* 翻譯按鈕 */}
+                            <button onClick={toggleLanguage} className="absolute top-[52px] right-5 z-40 bg-white/80 p-2 rounded-full shadow-md text-[#5d4037] hover:bg-white transition-colors active:scale-95">
+                                <icons.Languages size={20} />
+                            </button>
+
+                            {/* 彈窗元件 */}
+                            {selectedPoint && (
+                                <MapModal 
+                                    point={selectedPoint} 
+                                    onClose={() => setSelectedPoint(null)} 
+                                    onCheckIn={handleCheckIn}
+                                    isVisited={visitedLocations.includes(selectedPoint.id)}
+                                    t={t}
+                                />
+                            )}
+
+                            {/* 通知 Toast */}
+                            {showNotification && (
+                                <div className="absolute top-[60px] left-1/2 transform -translate-x-1/2 z-50 bg-[#5d4037] text-white px-4 py-2 rounded-full shadow-lg text-sm animate-fade-in whitespace-nowrap">
+                                    {notificationMsg}
+                                </div>
+                            )}
+
+                            {/* 內容捲動區 */}
+                            <div className="flex-1 overflow-y-auto scrollbar-hide pb-[85px] pt-[48px]">
+                                {renderContent()}
+                            </div>
+
+                            {/* 底部導航 */}
+                            <div className="absolute bottom-0 w-full h-[85px] bg-white/95 backdrop-blur-md border-t border-[#c6e5c3] flex justify-around items-start pt-3 px-2 z-40">
+                                <NavButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={<icons.Home size={24} />} label={t('navHome')} />
+                                <NavButton active={activeTab === 'map'} onClick={() => setActiveTab('map')} icon={<icons.Map size={24} />} label={t('navMap')} />
+                                <NavButton active={activeTab === 'journal'} onClick={() => setActiveTab('journal')} icon={<icons.BookOpen size={24} />} label={t('navJournal')} />
+                                <NavButton active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<icons.Settings size={24} />} label={t('navSettings')} />
+                            </div>
+
+                            {/* 底部 Home Indicator */}
+                            <div className="absolute bottom-[8px] left-1/2 -translate-x-1/2 w-[130px] h-[5px] bg-black/80 rounded-full z-50 pointer-events-none"></div>
+
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- NavButton ---
+        const NavButton = ({ active, onClick, icon, label }) => (
+            <button onClick={onClick} className={`flex flex-col items-center justify-center w-16 transition-all duration-300 ${active ? 'text-[#6b8e23] -translate-y-1' : 'text-gray-400'}`}>
+                <div className={`p-1.5 rounded-2xl ${active ? 'bg-[#eaf8e6] shadow-sm' : ''}`}>
+                    {icon}
+                </div>
+                <span className="text-[10px] mt-0.5 font-medium">{label}</span>
+            </button>
+        );
+
+        // --- HomeView (加入水彩背景) ---
+        const HomeView = ({ t }) => (
+            <div className="relative min-h-full px-6 py-4 pb-8">
+                {/* 插入水彩背景 */}
+                <WatercolorBg />
+                
+                {/* 內容區塊需設為 relative z-10 以確保在背景之上 */}
+                <div className="relative z-10">
+                    <div className="flex flex-col items-center mb-8 animate-fade-in">
+                        <h1 className="text-4xl font-black text-[#3e2723] tracking-[0.15em] drop-shadow-md font-serif my-4 mt-8">
+                            阿公講古
+                        </h1>
+                        <p className="text-[#8d6e63] font-medium text-xs mt-1 tracking-widest">{t('subtitle')}</p>
+                    </div>
+
+                    <div className="relative mb-8 group">
+                        <input type="text" placeholder={t('searchPlaceholder')} className="w-full bg-white/90 h-11 rounded-full pl-10 pr-4 shadow-sm border-2 border-transparent focus:border-[#aed581] focus:outline-none transition-all text-[#5d4037] placeholder-gray-400 text-sm backdrop-blur-sm" />
+                        <div className="absolute left-3 top-2.5 text-gray-400 group-focus-within:text-[#aed581] transition-colors"><icons.Search size={18} /></div>
+                    </div>
+
+                    <div className="mb-4 flex justify-between items-center">
+                        <h2 className="text-lg font-bold text-[#5d4037]">{t('recentActivities')}</h2>
+                        <span className="text-xs text-[#6b8e23] font-bold cursor-pointer">{t('viewAll')}</span>
+                    </div>
+
+                    <div className="space-y-4 pb-4">
+                        {ACTIVITIES_DATA.map((activity) => (
+                            <div key={activity.id} className="bg-white/90 p-4 rounded-2xl shadow-sm border-b-4 border-[#c6e5c3] flex items-center gap-4 transform transition-transform active:scale-95 backdrop-blur-sm">
+                                <div className="w-14 h-14 bg-[#f1f8e9] rounded-xl flex items-center justify-center text-2xl shadow-inner flex-shrink-0">
+                                    {activity.icon}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-bold text-[#5d4037] text-base truncate">{t(activity.titleKey)}</h3>
+                                    <div className="flex items-center text-gray-500 text-xs mt-1 truncate">
+                                        <div className="mr-1"><icons.MapPin size={10} /></div>
+                                        {t(activity.locationKey)}
+                                    </div>
+                                    <div className="text-[#6b8e23] text-[10px] font-bold mt-2 bg-[#eaf8e6] inline-block px-2 py-1 rounded-md">
+                                        {t(activity.dateKey)} | {t(activity.typeKey)}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+
+        // --- MapView (保持等高線背景) ---
+        const MapView = ({ onPointClick, visited, t }) => {
+            return (
+                <div className="relative w-full h-full bg-[#eaf8e6] overflow-hidden -mt-[48px] pt-[48px] h-[calc(100%+48px)]">
+                    <div className="absolute top-[60px] left-6 z-10">
+                        <h2 className="text-2xl font-bold text-[#5d4037]">{t('mapTitle')}</h2>
+                        <p className="text-xs text-[#8d6e63]">{t('mapSubtitle')}</p>
+                    </div>
+
+                    <div className="absolute inset-0 opacity-30 pointer-events-none">
+                        {[...Array(20)].map((_, i) => (
+                            <div key={i} className="absolute bg-white rounded-full"
+                                style={{
+                                    width: Math.random() * 6 + 2 + 'px',
+                                    height: Math.random() * 6 + 2 + 'px',
+                                    top: Math.random() * 100 + '%',
+                                    left: Math.random() * 100 + '%',
+                                }}
+                            />
+                        ))}
+                    </div>
+
+                    <div className="absolute w-full left-0 top-[120px] bottom-[100px]">
+                        {/* 等高線背景 */}
+                        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <path d="M -20 30 Q 30 20 60 0" fill="none" stroke="#c5e1a5" strokeWidth="0.5" />
+                            <path d="M -10 40 Q 30 30 50 0" fill="none" stroke="#c5e1a5" strokeWidth="0.5" />
+                            <path d="M 0 50 Q 30 40 40 0" fill="none" stroke="#c5e1a5" strokeWidth="0.5" />
+                            <path d="M 40 100 Q 60 70 110 80" fill="none" stroke="#c5e1a5" strokeWidth="0.5" />
+                            <path d="M 50 100 Q 70 80 110 90" fill="none" stroke="#c5e1a5" strokeWidth="0.5" />
+                            <path d="M 10 70 C 40 60, 60 80, 90 40" fill="none" stroke="#c5e1a5" strokeWidth="0.5" />
+                            <path d="M 0 80 C 30 70, 50 90, 100 50" fill="none" stroke="#c5e1a5" strokeWidth="0.5" />
+                            <ellipse cx="20" cy="20" rx="10" ry="5" fill="none" stroke="#c5e1a5" strokeWidth="0.5" transform="rotate(-20 20 20)" />
+                            <ellipse cx="80" cy="80" rx="15" ry="8" fill="none" stroke="#c5e1a5" strokeWidth="0.5" transform="rotate(10 80 80)" />
+                        </svg>
+
+                        <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <path d="M 20 85 C 50 85, 50 75, 80 65 C 90 60, 80 50, 60 50 C 40 50, 20 45, 30 40 C 40 35, 70 25, 80 15" fill="none" stroke="#aed581" strokeWidth="6" strokeLinecap="round" className="opacity-60" />
+                            <path d="M 20 85 C 50 85, 50 75, 80 65 C 90 60, 80 50, 60 50 C 40 50, 20 45, 30 40 C 40 35, 70 25, 80 15" fill="none" stroke="#ffffff" strokeWidth="0.8" strokeDasharray="2 2" className="opacity-50" />
+                        </svg>
+
+                        {MAP_POINTS_DATA.map((point) => {
+                            const isVisited = visited.includes(point.id);
+                            return (
+                                <button
+                                    key={point.id}
+                                    onClick={() => onPointClick(point)}
+                                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center transition-all duration-500 hover:scale-105 active:scale-95`}
+                                    style={{ left: `${point.x}%`, top: `${point.y}%` }}
+                                >
+                                    <div className={`
+                                        w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg border-2 border-white
+                                        ${isVisited ? 'bg-[#ffecb3] animate-float' : 'bg-[#8d6e63] text-white grayscale opacity-90'}
+                                    `}>
+                                        {point.icon}
+                                    </div>
+                                    <div className={`
+                                        -mt-3.5 z-10 px-2 py-0 rounded-md text-xs font-bold whitespace-nowrap shadow-sm
+                                        ${isVisited ? 'bg-white text-[#5d4037]' : 'bg-[#5d4037] text-white'}
+                                    `}>
+                                        {t(point.nameKey)}
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- JournalView (加入水彩背景) ---
+        const JournalView = ({ entries, t }) => (
+            <div className="relative min-h-full px-6 py-4 pb-20 pt-8">
+                {/* 插入水彩背景 */}
+                <WatercolorBg />
+
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-6">
+                        <h2 className="text-2xl font-bold text-[#5d4037]">{t('journalTitle')}</h2>
+                        <div className="bg-[#fff3e0] text-[#ff9800] px-3 py-1 rounded-full text-[10px] font-bold">
+                            {t('journalCollected')} {entries.length} {t('journalCountSuffix')}
+                        </div>
+                    </div>
+
+                    {entries.length === 0 ? (
+                        <div className="text-center text-gray-400 mt-20">
+                            <p>{t('noJournal')}</p>
+                        </div>
+                    ) : (
+                        <div className="relative border-l-4 border-[#c6e5c3] ml-4 space-y-8">
+                            {entries.map((entry) => (
+                                <div key={entry.id} className="relative pl-8 group">
+                                    <div className="absolute -left-[14px] top-0 w-6 h-6 bg-[#aed581] border-4 border-white rounded-full shadow-sm group-hover:scale-125 transition-transform"></div>
+                                    <div className="bg-white/90 rounded-2xl p-5 shadow-sm border-b-4 border-[#e0e0e0] transform transition-all hover:-translate-y-1 hover:shadow-md backdrop-blur-sm">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-2xl">{entry.image}</span>
+                                                <h3 className="font-bold text-[#5d4037] text-base">{entry.location}</h3>
+                                            </div>
+                                            <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-1 rounded-md">{entry.time}</span>
+                                        </div>
+                                        <p className="text-[#8d6e63] text-sm leading-relaxed text-justify">{entry.content}</p>
+                                        <div className="mt-4 h-28 bg-gray-100/50 rounded-xl flex items-center justify-center text-gray-300 border-2 border-dashed border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer">
+                                            <div className="flex items-center"><icons.Camera size={20} className="mr-2" /><span className="text-xs">{t('addPhoto')}</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+
+        // --- SettingsView (加入水彩背景) ---
+        const SettingsView = ({ t }) => (
+            <div className="relative min-h-full px-6 py-4 pb-20 pt-8">
+                {/* 插入水彩背景 */}
+                <WatercolorBg />
+
+                <div className="relative z-10">
+                    <h2 className="text-2xl font-bold text-[#5d4037] mb-6">{t('settingsTitle')}</h2>
+                    <div className="bg-[#5d4037] rounded-2xl p-6 text-white mb-8 flex items-center gap-4 shadow-lg">
+                        <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                            <icons.User size={28} />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-lg">{t('accountName')}</h3>
+                            <p className="text-white/70 text-xs">{t('accountLevel')}</p>
+                        </div>
+                    </div>
+                    <div className="bg-white/90 rounded-2xl shadow-sm overflow-hidden backdrop-blur-sm">
+                        <SettingItem icon={<icons.Type size={18} />} title={t('setFontSize')} value={t('setValueSize')} />
+                        <SettingItem icon={<icons.Volume2 size={18} />} title={t('setSpeed')} value={t('setValueSpeed')} />
+                        <SettingItem icon={<icons.Music size={18} />} title={t('setBgMusic')} value={t('setValueMusic')} toggle />
+                        <SettingItem icon={<icons.Star size={18} />} title={t('setFavorites')} hasArrow />
+                        <SettingItem icon={<icons.BookOpen size={18} />} title={t('setLanguage')} value={t('setValueLang')} />
+                    </div>
+                    <div className="mt-8 text-center">
+                        <button className="text-[#5d4037] font-bold text-sm bg-[#eaf8e6] px-6 py-3 rounded-full hover:bg-[#dcedd9] transition-colors shadow-sm">{t('logout')}</button>
+                        <p className="text-[10px] text-gray-400 mt-4">{t('version')}</p>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const SettingItem = ({ icon, title, value, hasArrow, toggle }) => (
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-3 text-[#5d4037]">
+                    <div className="text-[#aed581]">{icon}</div>
+                    <span className="font-medium text-sm">{title}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    {value && <span className="text-xs text-gray-400">{value}</span>}
+                    {toggle && <div className="w-9 h-5 bg-[#aed581] rounded-full relative"><div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full shadow-sm"></div></div>}
+                    {hasArrow && <icons.ChevronRight size={16} className="text-gray-300" />}
+                </div>
+            </div>
+        );
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<GrandpaStoryApp />);
+    </script>
+</body>
+</html>
